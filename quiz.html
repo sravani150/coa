@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Computer Organization & Architecture Quiz</title>
+<style>
+:root{--primary:#2563eb;--bg:#f8fafc;--border:#e2e8f0;--text:#0f172a}
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.quiz-card{background:white;border:1px solid var(--border);border-radius:12px;width:100%;max-width:680px;padding:30px;box-shadow:0 5px 20px #0001}
+.hidden{display:none!important}
+h1{font-size:24px;margin-bottom:12px}
+.subtitle{color:#64748b;line-height:1.5;margin-bottom:24px}
+button{cursor:pointer;border-radius:6px;padding:12px;font-size:15px}
+.btn-primary,.btn-next{background:var(--primary);color:white;border:0}
+.btn-primary{width:100%}
+.top-meta{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:20px}
+.timer{color:var(--primary);font-weight:bold;background:#f0f9ff;padding:6px 10px;border-radius:5px}
+.unit{color:var(--primary);font-size:13px;font-weight:bold;margin-bottom:12px}
+.question{font-size:18px;line-height:1.5;margin-bottom:20px}
+.options{display:flex;flex-direction:column;gap:10px}
+.option{background:white;border:1px solid var(--border);text-align:left;color:var(--text)}
+.option:hover:not(:disabled){background:#f1f5f9}
+.correct{background:#f0fdf4!important;border-color:#86efac!important;color:#16a34a!important}
+.wrong{background:#fef2f2!important;border-color:#fca5a5!important;color:#dc2626!important}
+.info{background:#f0f9ff;border-left:4px solid var(--primary);padding:14px;margin-top:16px;line-height:1.5;border-radius:4px}
+.info-title{font-weight:bold;color:var(--primary);margin-bottom:5px}
+.controls{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--border);padding-top:18px;margin-top:22px}
+.btn-nav{background:white;border:1px solid var(--border)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.result{text-align:center;padding:25px 0}
+.score{font-size:48px;color:var(--primary);font-weight:bold;margin:20px}
+@media(max-width:480px){.quiz-card{padding:20px}.question{font-size:16px}.controls button{padding:10px;font-size:13px}}
+</style>
+</head>
+<body>
+<div class="quiz-card">
+<div id="start-screen">
+<h1>Computer Organization & Architecture</h1>
+<p class="subtitle">Self-assessment test covering Units 1 through 4. You will have 60 seconds per question. Hints appear automatically after 20 and 40 seconds.</p>
+<button class="btn-primary" id="start-btn">Begin Quiz</button>
+</div>
+
+<div id="quiz-screen" class="hidden">
+<div class="top-meta">
+<span id="counter">Question 01 / 20</span>
+<span class="timer" id="timer">01:00</span>
+</div>
+<div class="unit" id="unit"></div>
+<div class="question" id="question"></div>
+<div class="options" id="options"></div>
+<div id="hint-box" class="info hidden" aria-live="polite">
+<div class="info-title" id="hint-title">Hint</div>
+<div id="hint-text"></div>
+</div>
+<div id="explanation-box" class="info hidden">
+<div class="info-title">Explanation</div>
+<div id="explanation"></div>
+</div>
+<div class="controls">
+<button class="btn-nav" id="prev-btn" disabled>← Previous</button>
+<button class="btn-next" id="next-btn">Next Question →</button>
+</div>
+</div>
+
+<div id="result-screen" class="hidden result">
+<h1>Assessment Complete</h1>
+<p class="subtitle">Your final performance summary:</p>
+<div class="score" id="score">0 / 20</div>
+<button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+</div>
+</div>
+
+<script>
+const questions=[
+{
+unit:"Unit 1: Digital Logic",
+q:"Which basic logic gate produces HIGH (1) only when both inputs are HIGH (1)?",
+options:["A) OR gate","B) NOR gate","C) AND gate","D) NOT gate"],
+answer:2,
+hint20:"Think about the gate that requires every input to be 1.",
+hint40:"AND means logical multiplication. Both inputs must be 1.",
+explanation:"An AND gate produces 1 only when both inputs are 1."
+},
+{
+unit:"Unit 1: Digital Logic",
+q:"What is the output of a NOT gate when its input is 1?",
+options:["A) 0","B) 1","C) 2","D) High Impedance"],
+answer:0,
+hint20:"A NOT gate reverses the input.",
+hint40:"The output is the complement of the input.",
+explanation:"A NOT gate inverts its input, so 1 becomes 0."
+},
+{
+unit:"Unit 1: Digital Logic",
+q:"Which circuit adds two single binary bits?",
+options:["A) Full Adder","B) Half Adder","C) Multiplexer","D) Decoder"],
+answer:1,
+hint20:"This circuit produces Sum and Carry.",
+hint40:"A Full Adder also accepts an input carry.",
+explanation:"A Half Adder adds two bits and produces Sum and Carry."
+},
+{
+unit:"Unit 1: Digital Logic",
+q:"How many data inputs does a 2-to-1 Multiplexer have?",
+options:["A) 1","B) 2","C) 4","D) 8"],
+answer:1,
+hint20:"Look at the numbers in 2-to-1.",
+hint40:"One select line chooses between two data inputs.",
+explanation:"A 2-to-1 MUX has two data inputs and one select line."
+},
+{
+unit:"Unit 1: Digital Logic",
+q:"Which sequential circuit element stores one bit of data?",
+options:["A) Encoder","B) Flip-Flop","C) Decoder","D) Multiplexer"],
+answer:1,
+hint20:"Think of a bistable storage element.",
+hint40:"It can store one of two states: 0 or 1.",
+explanation:"A flip-flop stores one bit of binary information."
+},
+{
+unit:"Unit 2: Register Transfer",
+q:"What does R2 ← R1 mean in Register Transfer Language?",
+options:["A) Compare R1 and R2","B) Copy R1 into R2","C) Add R1 and R2","D) Swap R1 and R2"],
+answer:1,
+hint20:"The arrow indicates data transfer.",
+hint40:"The register on the right is the source.",
+explanation:"The contents of R1 are copied into R2."
+},
+{
+unit:"Unit 2: Register Transfer",
+q:"Which microoperation performs addition and subtraction?",
+options:["A) Logic Microoperation","B) Shift Microoperation","C) Arithmetic Microoperation","D) Register Microoperation"],
+answer:2,
+hint20:"Think about mathematical operations.",
+hint40:"Addition, subtraction, increment and decrement belong to this category.",
+explanation:"Arithmetic microoperations perform numerical calculations."
+},
+{
+unit:"Unit 2: Register Transfer",
+q:"What is the bitwise AND result of 1010 and 1100?",
+options:["A) 1000","B) 1110","C) 0110","D) 0001"],
+answer:0,
+hint20:"Compare the bits in corresponding positions.",
+hint40:"AND produces 1 only when both bits are 1.",
+explanation:"1010 AND 1100 = 1000."
+},
+{
+unit:"Unit 2: Register Transfer",
+q:"What happens during a logical shift-right operation?",
+options:["A) Bits shift right and 0 enters the leftmost position","B) Bits shift left","C) Discarded bits return to the left","D) All bits become 0"],
+answer:0,
+hint20:"Every bit moves one position to the right.",
+hint40:"A logical right shift inserts 0 at the left.",
+explanation:"A logical right shift moves bits right and fills the MSB with 0."
+},
+{
+unit:"Unit 2: Register Transfer",
+q:"Why is a common bus used in a computer system?",
+options:["A) Increase clock speed","B) Transfer data between registers using shared wires","C) Store programs permanently","D) Convert AC to DC"],
+answer:1,
+hint20:"Think about communication between registers.",
+hint40:"A shared set of wires carries data between multiple registers.",
+explanation:"A common bus provides a shared path for register data transfers."
+},
+{
+unit:"Unit 3: Basic Computer Organization",
+q:"Which register holds the instruction currently being executed?",
+options:["A) Program Counter","B) Instruction Register","C) Memory Address Register","D) Accumulator"],
+answer:1,
+hint20:"Look for the register abbreviated IR.",
+hint40:"IR stands for Instruction Register.",
+explanation:"The Instruction Register holds the current instruction."
+},
+{
+unit:"Unit 3: Basic Computer Organization",
+q:"What happens during the fetch phase of an instruction cycle?",
+options:["A) The CPU executes the result","B) An instruction is read from memory into the CPU","C) Data is written to disk","D) The computer shuts down"],
+answer:1,
+hint20:"Fetch means to retrieve something.",
+hint40:"The CPU retrieves the next instruction from main memory.",
+explanation:"During fetch, the CPU retrieves the next instruction from memory."
+},
+{
+unit:"Unit 3: Basic Computer Organization",
+q:"What is the function of the Accumulator (AC)?",
+options:["A) Hold the next instruction address","B) Store arithmetic and logic operands and results","C) Control the clock","D) Count interrupts"],
+answer:1,
+hint20:"It is commonly used during calculations.",
+hint40:"It stores operands and intermediate ALU results.",
+explanation:"The accumulator stores data and intermediate arithmetic or logic results."
+},
+{
+unit:"Unit 3: Basic Computer Organization",
+q:"In direct addressing, what does the address field contain?",
+options:["A) The actual operand","B) The memory address of the operand","C) A pointer to another address","D) An index offset"],
+answer:1,
+hint20:"The address is specified directly.",
+hint40:"The field identifies the memory location containing the operand.",
+explanation:"Direct addressing specifies the effective memory address in the instruction."
+},
+{
+unit:"Unit 3: Basic Computer Organization",
+q:"What is the purpose of the Control Unit (CU)?",
+options:["A) Perform additions","B) Coordinate computer operations using control signals","C) Store user files","D) Display graphics"],
+answer:1,
+hint20:"It coordinates operations rather than performing calculations.",
+hint40:"It generates control signals for CPU components.",
+explanation:"The Control Unit coordinates data movement and operations using control signals."
+},
+{
+unit:"Unit 4: CPU Architecture",
+q:"Which CPU component performs arithmetic and logical operations?",
+options:["A) Control Unit","B) Arithmetic Logic Unit","C) Program Counter","D) Memory Address Register"],
+answer:1,
+hint20:"Look for the component abbreviated ALU.",
+hint40:"ALU stands for Arithmetic Logic Unit.",
+explanation:"The ALU performs arithmetic calculations and logical operations."
+},
+{
+unit:"Unit 4: CPU Architecture",
+q:"In which addressing mode is the operand value included in the instruction?",
+options:["A) Immediate Addressing","B) Direct Addressing","C) Register Addressing","D) Indirect Addressing"],
+answer:0,
+hint20:"The operand is supplied immediately.",
+hint40:"The value itself appears in the instruction.",
+explanation:"Immediate addressing specifies the operand value directly in the instruction."
+},
+{
+unit:"Unit 4: CPU Architecture",
+q:"What is the primary function of the Program Counter (PC)?",
+options:["A) Store calculation results","B) Hold the address of the next instruction","C) Count execution time","D) Store retrieved data"],
+answer:1,
+hint20:"It helps determine which instruction comes next.",
+hint40:"PC stands for Program Counter.",
+explanation:"The PC holds the address of the next instruction to be fetched."
+},
+{
+unit:"Unit 4: CPU Architecture",
+q:"What is pipelining in computer architecture?",
+options:["A) Permanent data storage","B) Overlapping instruction execution stages","C) Connecting multiple CPUs","D) Converting assembly into machine code"],
+answer:1,
+hint20:"Think of multiple instructions being processed in stages.",
+hint40:"Overlapping stages increases instruction throughput.",
+explanation:"Pipelining overlaps instruction-processing stages to improve throughput."
+},
+{
+unit:"Unit 4: CPU Architecture",
+q:"Which architecture uses a reduced set of simple instructions?",
+options:["A) CISC","B) RISC","C) VLIW","D) MISD"],
+answer:1,
+hint20:"The name includes the word Reduced.",
+hint40:"RISC stands for Reduced Instruction Set Computer.",
+explanation:"RISC uses a relatively small set of simple instructions."
+}
+];
+
+let currentIdx=0;
+let userAnswers=Array(questions.length).fill(null);
+let timerInterval;
+let timeLeft=60;
+
+const $=id=>document.getElementById(id);
+
+$("start-btn").addEventListener("click",()=>{
+$("start-screen").classList.add("hidden");
+$("quiz-screen").classList.remove("hidden");
+loadQuestion();
+});
+
+$("next-btn").addEventListener("click",()=>{
+if(currentIdx<questions.length-1){
+currentIdx++;
+loadQuestion();
+}else{
+showResults();
+}
+});
+
+$("prev-btn").addEventListener("click",()=>{
+if(currentIdx>0){
+currentIdx--;
+loadQuestion();
+}
+});
+
+function updateTimerUI(){
+$("timer").innerText="00:"+String(timeLeft).padStart(2,"0");
+}
+
+function startTimer(){
+clearInterval(timerInterval);
+timeLeft=60;
+$("hint-box").classList.add("hidden");
+$("hint-title").innerText="Hint";
+$("hint-text").innerText="";
+updateTimerUI();
+
+timerInterval=setInterval(()=>{
+timeLeft--;
+updateTimerUI();
+
+if(timeLeft===40){
+showHint(1);
+}
+if(timeLeft===20){
+showHint(2);
+}
+if(timeLeft<=0){
+clearInterval(timerInterval);
+if(userAnswers[currentIdx]===null){
+selectOption(-1);
+}
+}
+},1000);
+}
+
+function showHint(number){
+const q=questions[currentIdx];
+$("hint-title").innerText="Hint "+number+" · "+(number===1?20:40)+" seconds";
+$("hint-text").innerText=number===1?q.hint20:q.hint40;
+$("hint-box").classList.remove("hidden");
+}
+
+function loadQuestion(){
+clearInterval(timerInterval);
+const q=questions[currentIdx];
+
+$("counter").innerText="Question "+String(currentIdx+1).padStart(2,"0")+" / "+questions.length;
+$("unit").innerText=q.unit;
+$("question").innerText=q.q;
+$("options").innerHTML="";
+$("prev-btn").disabled=currentIdx===0;
+$("next-btn").innerText=currentIdx===questions.length-1?"Finish Assessment":"Next Question →";
+$("hint-box").classList.add("hidden");
+$("explanation-box").classList.add("hidden");
+
+q.options.forEach((option,index)=>{
+const btn=document.createElement("button");
+btn.className="option";
+btn.innerText=option;
+btn.onclick=()=>selectOption(index);
+$("options").appendChild(btn);
+});
+
+if(userAnswers[currentIdx]!==null){
+timeLeft=0;
+updateTimerUI();
+renderAnswerState(userAnswers[currentIdx]);
+}else{
+startTimer();
+}
+}
+
+function selectOption(selectedIdx){
+if(userAnswers[currentIdx]!==null)return;
+clearInterval(timerInterval);
+userAnswers[currentIdx]=selectedIdx;
+renderAnswerState(selectedIdx);
+}
+
+function renderAnswerState(selectedIdx){
+const correctIdx=questions[currentIdx].answer;
+const buttons=$("options").getElementsByClassName("option");
+
+for(const btn of buttons){
+btn.disabled=true;
+}
+
+if(selectedIdx>=0){
+buttons[selectedIdx].classList.add(selectedIdx===correctIdx?"correct":"wrong");
+}
+buttons[correctIdx].classList.add("correct");
+
+$("hint-box").classList.add("hidden");
+$("explanation").innerText=questions[currentIdx].explanation;
+$("explanation-box").classList.remove("hidden");
+}
+
+function showResults(){
+clearInterval(timerInterval);
+let score=0;
+
+userAnswers.forEach((answer,index)=>{
+if(answer===questions[index].answer)score++;
+});
+
+$("quiz-screen").classList.add("hidden");
+$("result-screen").classList.remove("hidden");
+$("score").innerText=score+" / "+questions.length;
+}
+</script>
+</body>
+</html>
